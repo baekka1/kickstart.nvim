@@ -91,7 +91,19 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
+
+vim.cmd [[
+" Expand or jump in insert mode
+imap <silent><expr> <Tab> luasnip#expand_or_jumpable() ? '<Plug>luasnip-expand-or-jump' : '<Tab>' 
+
+" Jump forward through tabstops in visual mode
+smap <silent><expr> <Tab> luasnip#jumpable(1) ? '<Plug>luasnip-jump-next' : '<Tab>'
+
+" Jump backward through snippet tabstops with Shift-Tab (for example)
+imap <silent><expr> <S-Tab> luasnip#jumpable(-1) ? '<Plug>luasnip-jump-prev' : '<S-Tab>'
+smap <silent><expr> <S-Tab> luasnip#jumpable(-1) ? '<Plug>luasnip-jump-prev' : '<S-Tab>'
+]]
 
 -- [[ Setting options ]]
 -- See `:help vim.o`
@@ -102,7 +114,7 @@ vim.g.have_nerd_font = false
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.o.relativenumber = true
+vim.o.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.o.mouse = 'a'
@@ -141,6 +153,11 @@ vim.o.timeoutlen = 300
 vim.o.splitright = true
 vim.o.splitbelow = true
 
+-- Autoindent
+vim.o.autoindent = true
+vim.o.tabstop = 4
+vim.o.shiftwidth = 4
+
 -- Sets how neovim will display certain whitespace characters in the editor.
 --  See `:help 'list'`
 --  and `:help 'listchars'`
@@ -151,6 +168,12 @@ vim.o.splitbelow = true
 --   and `:help lua-options-guide`
 vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+
+-- Set max line width to 80
+vim.opt.textwidth = 80
+
+-- Keep cursor shape the same
+vim.opt.guicursor = ''
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
@@ -166,6 +189,9 @@ vim.o.scrolloff = 10
 -- See `:help 'confirm'`
 vim.o.confirm = true
 
+-- Set conceallevel for obsidian plugin
+vim.opt.conceallevel = 1
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -173,8 +199,22 @@ vim.o.confirm = true
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- Map Esc to jk
+vim.keymap.set('i', 'jk', '<Esc>')
+
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+-- Open/close Neotree
+vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true })
+
+-- Texpresso
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'tex',
+  callback = function()
+    vim.keymap.set('n', '<leader>T', ':TeXpresso %<CR>', { buffer = true, desc = 'Open TeXpresso' })
+  end,
+})
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -282,6 +322,47 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
+  },
+  {
+    'lervag/vimtex',
+    lazy = false, -- always load
+    init = function()
+      -- Use tectonic instead of latexmk
+      vim.g.vimtex_compiler_method = 'tectonic'
+      vim.g.vimtex_compiler_tectonic = {
+        executable = 'tectonic',
+        options = { '--synctex', '--keep-intermediates' },
+      }
+
+      -- Let TeXpresso be your viewer, not VimTeX
+      vim.g.vimtex_view_method = 'general'
+      vim.g.vimtex_view_automatic = 0
+
+      -- Always treat files as LaTeX
+      vim.g.tex_flavor = 'latex'
+    end,
+  },
+  {
+    'let-def/texpresso.vim',
+  },
+  {
+    'iurimateus/luasnip-latex-snippets.nvim',
+    dependencies = {
+      'L3MON4D3/LuaSnip',
+      'lervag/vimtex', -- for math context detection
+    },
+    config = function()
+      require('luasnip-latex-snippets').setup {
+        use_treesitter = true, -- set true if you want Treesitter-based math detection
+      }
+      require('luasnip').config.set_config {
+        enable_autosnippets = true, -- allow auto-triggered snippets
+      }
+      require('luasnip.loaders.from_lua').lazy_load {
+        paths = { '~/.config/nvim/LuaSnip/' },
+      }
+    end,
+    ft = { 'tex', 'plaintex' }, -- only load for TeX files
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -674,7 +755,7 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         -- pyright = {},
-        -- rust_analyzer = {},
+        rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -944,7 +1025,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'rust' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
@@ -974,11 +1055,12 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.obsidian',
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
