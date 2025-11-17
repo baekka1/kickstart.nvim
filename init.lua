@@ -170,7 +170,7 @@ vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Set max line width to 80
-vim.opt.textwidth = 80
+vim.opt.textwidth = 120
 
 -- Keep cursor shape the same
 vim.opt.guicursor = ''
@@ -324,19 +324,33 @@ require('lazy').setup({
     },
   },
   {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' }, -- if you use standalone mini plugins
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {},
+  },
+  {
     'lervag/vimtex',
     lazy = false, -- always load
     init = function()
       -- Use tectonic instead of latexmk
-      vim.g.vimtex_compiler_method = 'tectonic'
+      -- vim.g.vimtex_compiler_method = 'tectonic'
+      --[[
       vim.g.vimtex_compiler_tectonic = {
         executable = 'tectonic',
         options = { '--synctex', '--keep-intermediates' },
       }
+      */ ]]
+      --
 
       -- Let TeXpresso be your viewer, not VimTeX
-      vim.g.vimtex_view_method = 'general'
-      vim.g.vimtex_view_automatic = 0
+      vim.g.vimtex_view_method = 'skim'
+      vim.g.vimtex_view_automatic = 1
+      vim.g.vimtex_view_skim_sync = 1
+      vim.g.vimtex_view_skim_reading_bar = 1
 
       -- Always treat files as LaTeX
       vim.g.tex_flavor = 'latex'

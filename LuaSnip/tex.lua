@@ -17,7 +17,7 @@ return {
 \documentclass{article}
 
 \usepackage{amsmath, amsxtra, verbatim}
-\usepackage{amssymb, asmthm}
+\usepackage{amssymb, amsthm}
 \usepackage{graphicx}
 \usepackage[cmtip,all]{xy}
 \usepackage{xypic}
