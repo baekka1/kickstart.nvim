@@ -170,7 +170,7 @@ vim.o.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
 -- Set max line width to 80
-vim.opt.textwidth = 120
+vim.opt.textwidth = 80
 
 -- Keep cursor shape the same
 vim.opt.guicursor = ''
