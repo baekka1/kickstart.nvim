@@ -208,6 +208,18 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- Open/close Neotree
 vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { noremap = true, silent = true })
 
+-- Accept bracket behavoir
+vim.keymap.set('i', '<Tab>', function()
+  local col = vim.fn.col '.'
+  local line = vim.fn.getline '.'
+  local next_char = line:sub(col, col)
+
+  if next_char:match '[%)%]%}%>"]' then
+    return '<Right>'
+  else
+    return '<Tab>'
+  end
+end, { expr = true })
 -- Texpresso
 vim.api.nvim_create_autocmd('FileType', {
   pattern = 'tex',
@@ -333,6 +345,28 @@ require('lazy').setup({
     opts = {},
   },
   {
+    'scalameta/nvim-metals',
+    ft = { 'scala', 'sbt', 'java' },
+    opts = function()
+      local metals_config = require('metals').bare_config()
+      metals_config.on_attach = function(client, bufnr)
+        -- your on_attach function
+      end
+
+      return metals_config
+    end,
+    config = function(self, metals_config)
+      local nvim_metals_group = vim.api.nvim_create_augroup('nvim-metals', { clear = true })
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = self.ft,
+        callback = function()
+          require('metals').initialize_or_attach(metals_config)
+        end,
+        group = nvim_metals_group,
+      })
+    end,
+  },
+  {
     'lervag/vimtex',
     lazy = false, -- always load
     init = function()
@@ -351,7 +385,7 @@ require('lazy').setup({
       vim.g.vimtex_view_automatic = 1
       vim.g.vimtex_view_skim_sync = 1
       vim.g.vimtex_view_skim_reading_bar = 1
-
+      vim.g.vimtex_compiler_silent = 1
       -- Always treat files as LaTeX
       vim.g.tex_flavor = 'latex'
     end,
